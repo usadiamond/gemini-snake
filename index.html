@@ -26,37 +26,30 @@
   <div id="root"></div>
   <script type="module" src="/index.tsx"></script>
 
-  <!-- Firebase SDKs - These provide the tools -->
-  <script src="https://www.gstatic.com/firebasejs/YOUR_VERSION_NUMBER/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/YOUR_VERSION_NUMBER/firebase-database-compat.js"></script>
-  <!-- Note: I'm using -compat versions here, which are easier for global access. -->
+ <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
 
-  <script>
-    // Your Firebase project's configuration object
-    // PASTE THE firebaseConfig SNIPPET YOU COPIED FROM THE CONSOLE HERE
-    const firebaseConfig = {
-  apiKey: "AIzaSyApY5vIrS-by7VTZnma7TWdnyoUOohr08g",
-  authDomain: "snake-447a3.firebaseapp.com",
-  databaseURL: "https://snake-447a3-default-rtdb.firebaseio.com",
-  projectId: "snake-447a3",
-  storageBucket: "snake-447a3.firebasestorage.app",
-  messagingSenderId: "962445311597",
-  appId: "1:962445311597:web:aa6676df486f7bd77a4964",
-  measurementId: "G-XWT29YE235"
-};
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyApY5vIrS-by7VTZnma7TWdnyoUOohr08g",
+    authDomain: "snake-447a3.firebaseapp.com",
+    databaseURL: "https://snake-447a3-default-rtdb.firebaseio.com",
+    projectId: "snake-447a3",
+    storageBucket: "snake-447a3.firebasestorage.app",
+    messagingSenderId: "962445311597",
+    appId: "1:962445311597:web:484c4e71d19e57ec7a4964",
+    measurementId: "G-WL2MX9L9J8"
+  };
 
-
-    // Initialize Firebase. This connects your app to your Firebase project.
-    firebase.initializeApp(firebaseConfig);
-
-    // You can now get a reference to your Realtime Database instance
-    const database = firebase.database();
-
-    // Optional: A small test to ensure it's working
-    console.log("Firebase initialized!");
-    console.log("Database reference:", database);
-
-  </script>
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 
 </body>
 </html>
