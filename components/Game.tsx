@@ -34,6 +34,8 @@ import {
 import useGameLoop from '../hooks/useGameLoop';
 import MiniMap from './MiniMap';
 import Leaderboard from './Leaderboard';
+import { database } from '../firebase';
+import { ref, onValue, set } from "firebase/database";
 
 interface GameProps {
   onGameOver: (score: number) => void;
@@ -164,6 +166,44 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     state.isGameRunning = true;
     setRenderTrigger(t => t + 1);
   }, [gameSettings, playerNickname, createInitialPlayerSnake, createAISnake, spawnNewFoodItems]);
+
+  // Effect to demonstrate Firebase connectivity
+  useEffect(() => {
+    if (!playerNickname) return;
+
+    // Create a reference to a location for this player
+    const playerRef = ref(database, 'players/' + playerNickname);
+
+    // Set some initial data for this player.
+    // This demonstrates WRITING to the database.
+    set(playerRef, {
+      nickname: playerNickname,
+      score: 0,
+      isOnline: true
+    }).then(() => {
+        console.log(`Firebase: Player '${playerNickname}' data set.`);
+    }).catch(error => {
+        console.error("Firebase: Error setting player data", error);
+    });
+
+    // Create a reference to listen for some global game state.
+    const gameStatusRef = ref(database, 'gameStatus');
+
+    // Set up a listener for real-time updates.
+    // This demonstrates READING from the database.
+    const unsubscribe = onValue(gameStatusRef, (snapshot) => {
+        const data = snapshot.val();
+        console.log("Firebase: Received game status update:", data);
+    });
+
+    // Return a cleanup function to remove the listener when the component unmounts.
+    return () => {
+        console.log(`Firebase: Cleaning up listener for '${playerNickname}'.`);
+        unsubscribe(); // Detach the 'onValue' listener.
+        // For a real game, you would use Firebase's `onDisconnect` mechanism here
+        // to set the player's status to offline.
+    };
+  }, [playerNickname]); // Rerun if the nickname changes (e.g., new game)
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
