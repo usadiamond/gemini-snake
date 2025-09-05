@@ -3,20 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bubble Snake</title>
+    <title>Slither Fury</title>
     <style>
-        body { margin: 0; background-color: #1a202c; display: flex; justify-content: center; align-items: center; min-height: 100vh; color: white; font-family: sans-serif; }
+        body { margin: 0; background-color: #1a202c; color: white; font-family: sans-serif; }
     </style>
 </head>
 <body>
-    <div id="root">
-        <h1>Bubble Snake</h1>
-        <p>This is a test to verify the connection. Please wait...</p>
-    </div>
+    <div id="root"></div>
 
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
-    
-    <script src="game.js"></script>
+    <script type="importmap">
+{
+  "imports": {
+    "react": "https://esm.sh/react@18.2.0",
+    "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+    "firebase/app": "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js",
+    "firebase/database": "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.2.1/"
+  }
+}
+</script>
+    <script type="module" src="/index.tsx"></script>
 </body>
 </html>
