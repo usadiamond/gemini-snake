@@ -1,62 +1,52 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <title>Snake - Example with Firebase</title>
-    <meta name="viewport" content="width=device-width,initial-scale=1" />
-    <style>
-      body { font-family: Arial, sans-serif; padding: 20px; }
-      #score { font-size: 20px; margin: 10px 0; }
-      button { padding: 8px 12px; font-size: 16px; }
-    </style>
-  </head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Slither Fury</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  <script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.1.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.1.1/",
+    "react/": "https://aistudiocdn.com/react@^19.1.1/",
+    "firebase/": "https://aistudiocdn.com/firebase@^12.2.1/",
+    "vite": "https://aistudiocdn.com/vite@^7.1.4",
+    "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.0.2"
+  }
+}
+</script>
+</head>
   <body>
-    <h1>Snake (example)</h1>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+  <!-- Firebase SDKs (add these near the end of your page, before </body>) -->
+<script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore-compat.js"></script>
+<script src="/firebase-init.js"></script>
 
-    <!-- Your actual game page would replace or integrate with this demo block -->
-    <div id="score">Score: <span id="value">0</span></div>
-    <button id="increase">Increase score</button>
-    <button id="send">Send score to Firebase</button>
-    <div id="status"></div>
-
-    <!-- Firebase SDKs from CDN for simple usage (no npm needed) -->
-    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.24.0/firebase-firestore-compat.js"></script>
-
-    <!-- Put your Firebase project values into public/firebase-init.js -->
-    <script src="/firebase-init.js"></script>
-
-    <script>
-      if (!window.firebaseConfig) {
-        document.getElementById('status').innerText = 'firebase-init.js not configured yet';
-      } else {
-        firebase.initializeApp(window.firebaseConfig);
-        const db = firebase.firestore();
-
-        let current = 0;
-        const valueEl = document.getElementById('value');
-        document.getElementById('increase').addEventListener('click', () => {
-          current += 10;
-          valueEl.innerText = current;
+<script>
+  // Minimal snippet to send a score to Firestore (adapt into your game's code)
+  if (window.firebaseConfig) {
+    firebase.initializeApp(window.firebaseConfig);
+    const db = firebase.firestore();
+    async function sendScore(player, score) {
+      try {
+        const ref = await db.collection('scores').add({
+          player, score, createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
-
-        document.getElementById('send').addEventListener('click', async () => {
-          document.getElementById('status').innerText = 'Sending...';
-          try {
-            const player = 'Anonymous'; // later replace with real player name
-            const score = current;
-            const docRef = await db.collection('scores').add({
-              player,
-              score,
-              createdAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-            document.getElementById('status').innerText = 'Saved with id: ' + docRef.id;
-          } catch (err) {
-            console.error(err);
-            document.getElementById('status').innerText = 'Error: ' + err.message;
-          }
-        });
+        console.log('Saved score id:', ref.id);
+        return ref.id;
+      } catch (err) {
+        console.error('Save error', err);
+        throw err;
       }
-    </script>
+    }
+    // Example: call sendScore('Alice', 100) from your game when game over.
+  } else {
+    console.warn('firebaseConfig missing: edit public/firebase-init.js');
+  }
+</script>
   </body>
 </html>
