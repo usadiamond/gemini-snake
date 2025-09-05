@@ -1,0 +1,10 @@
+[build]
+  # No build command needed for a plain static site.
+  command = ""
+  # We publish the "public" folder (where your site's index.html will live).
+  publish = "public"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
