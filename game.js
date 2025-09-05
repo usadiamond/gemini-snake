@@ -24,3 +24,5 @@ window.onload = function() {
     writeTestData();
     document.getElementById('root').innerHTML = "<h1>Connection Verified!</h1><p>Check the Firebase Realtime Database for the 'test' node.</p>";
 };
+
+// 5. Just a change to push
