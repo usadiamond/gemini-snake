@@ -1,9 +1,9 @@
 import React, { useState, useCallback } from 'react';
-import Game from './components/Game';
-import StartScreen from './components/StartScreen';
-import GameOverScreen from './components/GameOverScreen';
-import SettingsModal from './components/SettingsModal'; // Import SettingsModal
-import { GameState, GameSettings } from './types';
+import Game from './components/Game.tsx';
+import StartScreen from './components/StartScreen.tsx';
+import GameOverScreen from './components/GameOverScreen.tsx';
+import SettingsModal from './components/SettingsModal.tsx'; // Import SettingsModal
+import { GameState, GameSettings } from './types.ts';
 import { 
   GAME_WIDTH, 
   GAME_HEIGHT, 
@@ -12,7 +12,7 @@ import {
   DEFAULT_WORLD_RADIUS,
   DEFAULT_AI_SNAKE_COUNT,
   DEFAULT_SHRINKING_WORLD_ENABLED
-} from './constants';
+} from './constants.ts';
 
 const App: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>(GameState.StartScreen);

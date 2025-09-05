@@ -1,5 +1,5 @@
 import React from 'react';
-import { Point, Snake } from '../types';
+import { Point, Snake } from '../types.ts';
 import { 
   MINI_MAP_AI_COLOR, 
   MINI_MAP_AI_DOT_SIZE,
@@ -8,7 +8,7 @@ import {
   MINI_MAP_BORDER_THICKNESS,
   MINI_MAP_PLAYER_COLOR,
   MINI_MAP_PLAYER_DOT_SIZE
-} from '../constants';
+} from '../constants.ts';
 
 interface MiniMapProps {
   totalWorldRadius: number;

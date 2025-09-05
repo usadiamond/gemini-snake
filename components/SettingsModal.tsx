@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { GameSettings } from '../types';
+import { GameSettings } from '../types.ts';
 
 interface SettingsModalProps {
   isOpen: boolean;

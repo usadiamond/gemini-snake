@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { database } from '../firebase';
+import { database } from '../firebase.ts';
 import { ref, onValue, set, onDisconnect, off } from 'firebase/database';
-import { Point, Snake, Food, SnakeSegment, PoisonPellet, GameSettings } from '../types';
+import { Point, Snake, Food, SnakeSegment, PoisonPellet, GameSettings } from '../types.ts';
 import {
   GAME_WIDTH, 
   GAME_HEIGHT, 
@@ -32,10 +32,10 @@ import {
   PLAY_AREA_BACKGROUND_COLOR,
   MINI_MAP_DISPLAY_RADIUS,
   MIN_WORLD_RADIUS,
-} from '../constants';
-import useGameLoop from '../hooks/useGameLoop';
-import MiniMap from './MiniMap';
-import Leaderboard from './Leaderboard';
+} from '../constants.ts';
+import useGameLoop from '../hooks/useGameLoop.ts';
+import MiniMap from './MiniMap.tsx';
+import Leaderboard from './Leaderboard.tsx';
 
 interface GameProps {
   onGameOver: (score: number) => void;
