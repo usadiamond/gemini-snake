@@ -1,4 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { database } from '../firebase';
+import { ref, onValue, set, onDisconnect, off } from 'firebase/database';
 import { Point, Snake, Food, SnakeSegment, PoisonPellet, GameSettings } from '../types';
 import {
   GAME_WIDTH, 
@@ -51,12 +53,17 @@ const getFoodPointsFromSnake = (deadSnake: Snake): Point[] => {
   return foodFromSnake;
 };
 
+// Generate a unique ID for the player for this session
+const playerId = `player-${Math.random().toString(36).substr(2, 9)}`;
+
 const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname }) => {
   const gameAreaRef = useRef<HTMLDivElement>(null);
   const [isBoosting, setIsBoosting] = useState<boolean>(false);
   const mousePositionRef = useRef<Point>({ x: GAME_WIDTH / 2, y: GAME_HEIGHT / 2 });
   const aiTargetUpdateTimers = useRef<number[]>([]);
   const borderThicknessNum = parseFloat(WORLD_BORDER_THICKNESS);
+
+  const [networkSnakes, setNetworkSnakes] = useState<Record<string, Snake>>({});
 
   const gameStateRef = useRef({
     playerSnake: null as Snake | null,
@@ -78,10 +85,34 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     const segments: SnakeSegment[] = [];
     const timestamp = Date.now();
     for (let i = 0; i < INITIAL_SNAKE_LENGTH; i++) {
-      segments.push({ id: `p-${timestamp}-${i}`, x: worldCenterX - i * SEGMENT_SIZE, y: worldCenterY });
+      segments.push({ id: `${playerId}-seg-${timestamp}-${i}`, x: worldCenterX - i * SEGMENT_SIZE, y: worldCenterY });
     }
-    return { id: 'player', nickname, segments, color: PLAYER_COLOR, isPlayer: true, direction: { x: 1, y: 0 }, nextGrowth: 0, score: 0 };
+    return { id: playerId, nickname, segments, color: PLAYER_COLOR, isPlayer: true, direction: { x: 1, y: 0 }, nextGrowth: 0, score: 0 };
   }, []);
+  
+  // Firebase setup
+  useEffect(() => {
+    const allPlayersRef = ref(database, 'players');
+    
+    const onPlayerData = (snapshot: any) => {
+        const playersData = snapshot.val() || {};
+        delete playersData[playerId]; // Don't include our own snake
+        setNetworkSnakes(playersData);
+    };
+
+    onValue(allPlayersRef, onPlayerData);
+
+    // Set up the disconnect handler
+    const playerRef = ref(database, `players/${playerId}`);
+    onDisconnect(playerRef).remove();
+
+    return () => {
+      off(allPlayersRef, 'value', onPlayerData);
+      const playerRef = ref(database, `players/${playerId}`);
+      set(playerRef, null); // Clean up on unmount
+    };
+  }, []);
+
 
   const createAISnake = useCallback((idSuffix: number | string, worldRadius: number, worldCenterX: number, worldCenterY: number): Snake => {
     const segments: SnakeSegment[] = [];
@@ -294,6 +325,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     if (Math.hypot(head.x - worldCenterX, head.y - worldCenterY) + headRadius > dynamicWorldRadius - borderThicknessNum) return true; 
     for (const other of allSnakes) {
       if (!other || !other.segments || other.id === snake.id) continue;
+      // Network snakes may not have a full segment list sometimes during sync
       const lethalSegments = other.segments.slice(1);
       for (const seg of lethalSegments) {
         if (Math.hypot(head.x - seg.x, head.y - seg.y) < SEGMENT_SIZE) return true;
@@ -340,6 +372,10 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     const state = gameStateRef.current;
     if (!state.isGameRunning || !state.playerSnake) return;
 
+    // Update player data in Firebase
+    const playerRef = ref(database, `players/${playerId}`);
+    set(playerRef, state.playerSnake);
+
     if (gameSettings.shrinkingWorldEnabled && state.dynamicWorldRadius > MIN_WORLD_RADIUS) {
         const shrinkAmount = state.shrinkRatePerSecond * (deltaTime / 1000);
         state.dynamicWorldRadius = Math.max(MIN_WORLD_RADIUS, state.dynamicWorldRadius - shrinkAmount);
@@ -382,11 +418,12 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     });
     state.foodItems = state.foodItems.filter(f => !foodEatenByAI.has(f.id));
 
-    const allSnakes = [state.playerSnake, ...state.aiSnakes];
+    const allSnakes = [state.playerSnake, ...state.aiSnakes, ...Object.values(networkSnakes)];
     if (checkCollision(state.playerSnake, allSnakes)) {
         state.foodItems.push(...spawnNewFoodItems(0, getFoodPointsFromSnake(state.playerSnake)));
         state.isGameRunning = false;
         onGameOver(state.playerSnake.score);
+        set(playerRef, null); // Remove player from DB on death
         return;
     }
 
@@ -413,17 +450,20 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     if (state.foodItems.length < MAX_FOOD_ITEMS) state.foodItems.push(...spawnNewFoodItems(1));
     
     state.leaderboard = allSnakes
+      .filter(s => s && s.id) // Filter out any null/undefined snakes
       .map(s => ({ id: s.id, nickname: s.nickname, score: s.score }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);
       
     setRenderTrigger(t => t + 1);
-  }, [ isBoosting, updateSnakePosition, checkCollision, onGameOver, spawnNewFoodItems, gameSettings ]);
+  }, [ isBoosting, updateSnakePosition, checkCollision, onGameOver, spawnNewFoodItems, gameSettings, networkSnakes ]);
 
   useGameLoop(gameTick, gameStateRef.current.isGameRunning, GAME_TICK_MS);
   
   const state = gameStateRef.current;
   if (!state.isGameRunning || !state.playerSnake) return null; 
+
+  const snakesToRender = [state.playerSnake, ...state.aiSnakes, ...Object.values(networkSnakes)];
 
   return (
     <div 
@@ -477,7 +517,9 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
         />
       ))}
 
-      {state.aiSnakes.map(snake => snake.segments.map((segment, index) => (
+      {snakesToRender.map(snake => {
+        if (!snake || !snake.segments || snake.id === playerId) return null; // Don't render player here
+        return snake.segments.map((segment, index) => (
           <div
             key={segment.id}
             className={`absolute rounded-full ${snake.color} ${index === 0 ? 'border-2 border-gray-400' : ''}`}
@@ -489,8 +531,8 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
               zIndex: snake.segments.length - index + 10, 
             }}
           />
-        ))
-      )}
+        ));
+      })}
 
       {state.playerSnake.segments.map((segment, index) => (
         <div
@@ -514,7 +556,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
         worldCenterX={state.worldCenterX}
         worldCenterY={state.worldCenterY}
         playerWorldPos={state.playerSnake.segments[0]}
-        aiSnakes={state.aiSnakes}
+        aiSnakes={[...state.aiSnakes, ...Object.values(networkSnakes).filter(s => s.id !== playerId)]}
         displayRadius={MINI_MAP_DISPLAY_RADIUS}
       />
       
