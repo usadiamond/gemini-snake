@@ -79,7 +79,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     shrinkRatePerSecond: 0,
   });
 
-  const [renderTrigger, setRenderTrigger] = useState(0);
+  const [tickCount, setTickCount] = useState(0);
 
   const createInitialPlayerSnake = useCallback((nickname: string, worldCenterX: number, worldCenterY: number): Snake => {
     const segments: SnakeSegment[] = [];
@@ -193,7 +193,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     const head = state.playerSnake.segments[0];
     state.viewportOffset = { x: head.x - GAME_WIDTH / 2, y: head.y - GAME_HEIGHT / 2 };
     state.isGameRunning = true;
-    setRenderTrigger(t => t + 1);
+    setTickCount(t => t + 1);
   }, [gameSettings, playerNickname, createInitialPlayerSnake, createAISnake, spawnNewFoodItems]);
 
   useEffect(() => {
@@ -391,6 +391,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     }
     
     state.foodItems = state.foodItems.filter(food => {
+      if (!state.playerSnake) return true; // Safety check
         const head = state.playerSnake.segments[0];
         const radius = food.value === LARGE_FOOD_VALUE ? FOOD_RADIUS * LARGE_FOOD_RADIUS_MULTIPLIER : FOOD_RADIUS;
         if (Math.hypot(head.x - food.position.x, head.y - food.position.y) < (SEGMENT_SIZE / 2) + radius) {
@@ -450,12 +451,12 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     if (state.foodItems.length < MAX_FOOD_ITEMS) state.foodItems.push(...spawnNewFoodItems(1));
     
     state.leaderboard = allSnakes
-      .filter(s => s && s.id) // Filter out any null/undefined snakes
+      .filter((s): s is Snake => s !== null && s !== undefined && s.id !== undefined)
       .map(s => ({ id: s.id, nickname: s.nickname, score: s.score }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);
       
-    setRenderTrigger(t => t + 1);
+    setTickCount(t => t + 1);
   }, [ isBoosting, updateSnakePosition, checkCollision, onGameOver, spawnNewFoodItems, gameSettings, networkSnakes ]);
 
   useGameLoop(gameTick, gameStateRef.current.isGameRunning, GAME_TICK_MS);
