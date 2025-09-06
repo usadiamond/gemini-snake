@@ -451,7 +451,10 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     if (state.foodItems.length < MAX_FOOD_ITEMS) state.foodItems.push(...spawnNewFoodItems(1));
     
     state.leaderboard = allSnakes
-      .filter((s): s is Snake => s !== null && s !== undefined && s.id !== undefined)
+      // Fix: Explicitly type `s` as `any` to avoid a type error where `s` is inferred as `unknown`
+      // and its properties cannot be accessed. The type guard `is Snake` will correctly
+      // refine the type for the subsequent `.map()` operation.
+      .filter((s: any): s is Snake => s !== null && s !== undefined && s.id !== undefined)
       .map(s => ({ id: s.id, nickname: s.nickname, score: s.score }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);

@@ -1,4 +1,5 @@
 {
-  "name": "Sneaky snake game",
-  "description": "A browser-based game inspired, where you control a growing snake, consume pellets, and avoid collisions."
+  "name": "gemini-snake",
+  "description": "A browser-based game inspired, where you control a growing snake, consume pellets, and avoid collisions.",
+  "requestFramePermissions": []
 }
