@@ -450,12 +450,15 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
 
     if (state.foodItems.length < MAX_FOOD_ITEMS) state.foodItems.push(...spawnNewFoodItems(1));
     
+    // FIX: Filter for valid snake objects and cast to Snake type before mapping.
+    // This resolves an issue where TypeScript incorrectly inferred the object type
+    // as 'unknown', causing a runtime error when accessing properties for the leaderboard.
     state.leaderboard = allSnakes
-      // FIX: Use a type guard to filter out invalid snake data. Network data from Firebase
-      // might not match the `Snake` type, so this ensures we only work with valid objects
-      // before mapping them for the leaderboard, preventing a crash.
-      .filter((s): s is Snake => s !== null && typeof s === 'object' && 'id' in s && 'nickname' in s && 'score' in s)
-      .map(s => ({ id: s.id, nickname: s.nickname, score: s.score }))
+      .filter(s => s && typeof s === 'object' && 'id' in s && 'nickname' in s && 'score' in s)
+      .map(s => {
+        const snake = s as Snake;
+        return {id: snake.id, nickname: snake.nickname, score: snake.score};
+      })
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);
       
