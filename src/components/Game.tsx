@@ -314,7 +314,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
           }
           growthApplied = snake.nextGrowth;
       }
-      return { ...snake, segments: newSegmentsArray, nextGrowth: snake.nextGrowth - growthApplied, direction: finalUpdatedDirection };
+      return { ...snake, segments: newSegmentsArray, nextGrowth: snake.nextGrowth - applied, direction: finalUpdatedDirection };
   }, [gameSettings]);
 
   const checkCollision = useCallback((snake: Snake, allSnakes: Snake[]): boolean => {
@@ -451,11 +451,11 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     if (state.foodItems.length < MAX_FOOD_ITEMS) state.foodItems.push(...spawnNewFoodItems(1));
     
     state.leaderboard = allSnakes
-      // Fix: The type of `s` was being inferred as `unknown`, causing an error when
-      // directly accessing `s.id`. Using `typeof s === 'object'` and the `in` operator
-      // provides a safe way to check if `s` is a valid snake-like object before it is
-      // cast, resolving the type error.
-      .filter((s: any): s is Snake => s !== null && typeof s === 'object' && 'id' in s)
+      // Fix: Let TypeScript infer the type of `s` and use a type guard to ensure that
+      // elements from `allSnakes` are valid Snake objects before attempting to access
+      // their properties. This resolves an error where properties were accessed on an
+      // `unknown` type, which can occur if `networkSnakes` contains unexpected data.
+      .filter((s): s is Snake => s !== null && typeof s === 'object' && 'id' in s)
       .map(s => ({ id: s.id, nickname: s.nickname, score: s.score }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);
