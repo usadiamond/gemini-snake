@@ -451,10 +451,11 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     if (state.foodItems.length < MAX_FOOD_ITEMS) state.foodItems.push(...spawnNewFoodItems(1));
     
     state.leaderboard = allSnakes
-      // Fix: Explicitly type `s` as `any` to avoid a type error where `s` is inferred as `unknown`
-      // and its properties cannot be accessed. The type guard `is Snake` will correctly
-      // refine the type for the subsequent `.map()` operation.
-      .filter((s: any): s is Snake => s !== null && s !== undefined && s.id !== undefined)
+      // Fix: The type of `s` was being inferred as `unknown`, causing an error when
+      // directly accessing `s.id`. Using `typeof s === 'object'` and the `in` operator
+      // provides a safe way to check if `s` is a valid snake-like object before it is
+      // cast, resolving the type error.
+      .filter((s: any): s is Snake => s !== null && typeof s === 'object' && 'id' in s)
       .map(s => ({ id: s.id, nickname: s.nickname, score: s.score }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);
