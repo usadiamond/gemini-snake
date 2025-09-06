@@ -314,7 +314,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
           }
           growthApplied = snake.nextGrowth;
       }
-      return { ...snake, segments: newSegmentsArray, nextGrowth: snake.nextGrowth - applied, direction: finalUpdatedDirection };
+      return { ...snake, segments: newSegmentsArray, nextGrowth: snake.nextGrowth - growthApplied, direction: finalUpdatedDirection };
   }, [gameSettings]);
 
   const checkCollision = useCallback((snake: Snake, allSnakes: Snake[]): boolean => {
@@ -451,11 +451,10 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     if (state.foodItems.length < MAX_FOOD_ITEMS) state.foodItems.push(...spawnNewFoodItems(1));
     
     state.leaderboard = allSnakes
-      // Fix: Let TypeScript infer the type of `s` and use a type guard to ensure that
-      // elements from `allSnakes` are valid Snake objects before attempting to access
-      // their properties. This resolves an error where properties were accessed on an
-      // `unknown` type, which can occur if `networkSnakes` contains unexpected data.
-      .filter((s): s is Snake => s !== null && typeof s === 'object' && 'id' in s)
+      // FIX: Use a type guard to filter out invalid snake data. Network data from Firebase
+      // might not match the `Snake` type, so this ensures we only work with valid objects
+      // before mapping them for the leaderboard, preventing a crash.
+      .filter((s): s is Snake => s !== null && typeof s === 'object' && 'id' in s && 'nickname' in s && 'score' in s)
       .map(s => ({ id: s.id, nickname: s.nickname, score: s.score }))
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);
