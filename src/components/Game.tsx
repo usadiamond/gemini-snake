@@ -450,8 +450,6 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
 
     if (state.foodItems.length < MAX_FOOD_ITEMS) state.foodItems.push(...spawnNewFoodItems(1));
     
-    // FIX: Use a type predicate to correctly filter and type snake objects for the leaderboard.
-    // This resolves a TypeScript error where properties were accessed on an 'unknown' type.
     state.leaderboard = allSnakes
       .filter((s): s is Snake => !!(s && typeof s === 'object' && 'id' in s && 'nickname' in s && 'score' in s))
       .map(s => ({id: s.id, nickname: s.nickname, score: s.score}))
@@ -555,10 +553,6 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
 
       <Leaderboard players={state.leaderboard} playerId={playerSnake.id} />
 
-      {/* 
-        FIX: Add a type guard to ensure network snake objects are valid and have an 'id' before access.
-        This resolves a TypeScript error where 'id' was accessed on an 'unknown' type.
-      */}
       <MiniMap
         totalWorldRadius={gameSettings.worldRadius}
         currentPlayableRadius={state.dynamicWorldRadius}
