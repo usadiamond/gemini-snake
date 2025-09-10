@@ -10,11 +10,6 @@ export const DEFAULT_SHRINKING_WORLD_ENABLED = false; // Default for shrinking w
 // Shrinking World Constants
 export const MIN_WORLD_RADIUS = 150; // The smallest the world can get
 
-// These are derived based on the current worldRadius setting in Game.tsx
-// export const WORLD_CENTER_X = WORLD_RADIUS; // X-coordinate of the world's center
-// export const WORLD_CENTER_Y = WORLD_RADIUS; // Y-coordinate of the world's center
-// The world is a circle inscribed in a square from (0,0) to (currentWorldRadius*2, currentWorldRadius*2)
-
 export const VIEWPORT_EXTRA_PADDING = 500; // How much extra space around the world bounding box the camera can see.
 
 export const SEGMENT_SIZE = 12; // Diameter of a segment

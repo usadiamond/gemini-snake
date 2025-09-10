@@ -79,7 +79,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     shrinkRatePerSecond: 0,
   });
 
-  const [tickCount, setTickCount] = useState(0);
+  const [, setTickCount] = useState(0);
 
   const createInitialPlayerSnake = useCallback((nickname: string, worldCenterX: number, worldCenterY: number): Snake => {
     const segments: SnakeSegment[] = [];
@@ -317,7 +317,7 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
       return { ...snake, segments: newSegmentsArray, nextGrowth: snake.nextGrowth - growthApplied, direction: finalUpdatedDirection };
   }, [gameSettings]);
 
-  const checkCollision = useCallback((snake: Snake, allSnakes: Snake[]): boolean => {
+  const checkCollision = useCallback((snake: Snake, allSnakes: (Snake|null)[]): boolean => {
     if (!snake || snake.segments.length === 0) return false;
     const { dynamicWorldRadius, worldCenterX, worldCenterY } = gameStateRef.current;
     const head = snake.segments[0]; 
@@ -451,8 +451,8 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
     if (state.foodItems.length < MAX_FOOD_ITEMS) state.foodItems.push(...spawnNewFoodItems(1));
     
     state.leaderboard = allSnakes
-      .filter((s): s is Snake => s !== null && s !== undefined && s.id !== undefined)
-      .map(s => ({ id: s.id, nickname: s.nickname, score: s.score }))
+      .filter((s): s is Snake => !!(s && typeof s === 'object' && 'id' in s && 'nickname' in s && 'score' in s))
+      .map(s => ({id: s.id, nickname: s.nickname, score: s.score}))
       .sort((a, b) => b.score - a.score)
       .slice(0, 10);
       
@@ -462,9 +462,11 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
   useGameLoop(gameTick, gameStateRef.current.isGameRunning, GAME_TICK_MS);
   
   const state = gameStateRef.current;
-  if (!state.isGameRunning || !state.playerSnake) return null; 
+  const playerSnake = state.playerSnake;
 
-  const snakesToRender = [state.playerSnake, ...state.aiSnakes, ...Object.values(networkSnakes)];
+  if (!state.isGameRunning || !playerSnake) return null; 
+
+  const snakesToRender = [playerSnake, ...state.aiSnakes, ...Object.values(networkSnakes)];
 
   return (
     <div 
@@ -535,29 +537,34 @@ const Game: React.FC<GameProps> = ({ onGameOver, gameSettings, playerNickname })
         ));
       })}
 
-      {state.playerSnake.segments.map((segment, index) => (
+      {playerSnake.segments.map((segment, index) => (
         <div
           key={segment.id}
-          className={`absolute rounded-full ${state.playerSnake.color} ${index === 0 ? 'ring-2 ring-yellow-300 border-2 border-black' : ''}`}
+          className={`absolute rounded-full ${playerSnake.color} ${index === 0 ? 'ring-2 ring-yellow-300 border-2 border-black' : ''}`}
           style={{
             width: `${SEGMENT_SIZE}px`, height: `${SEGMENT_SIZE}px`,
             left: `${Math.round(segment.x - state.viewportOffset.x)}px`, 
             top: `${Math.round(segment.y - state.viewportOffset.y)}px`,  
             transform: 'translate(-50%, -50%)',
-            zIndex: 100 + state.playerSnake.segments.length - index, 
+            zIndex: 100 + playerSnake.segments.length - index, 
           }}
         />
       ))}
 
-      <Leaderboard players={state.leaderboard} playerId={state.playerSnake.id} />
+      <Leaderboard players={state.leaderboard} playerId={playerSnake.id} />
 
       <MiniMap
         totalWorldRadius={gameSettings.worldRadius}
         currentPlayableRadius={state.dynamicWorldRadius}
         worldCenterX={state.worldCenterX}
         worldCenterY={state.worldCenterY}
-        playerWorldPos={state.playerSnake.segments[0]}
-        aiSnakes={[...state.aiSnakes, ...Object.values(networkSnakes).filter(s => s.id !== playerId)]}
+        playerWorldPos={playerSnake.segments[0]}
+        aiSnakes={[
+          ...state.aiSnakes,
+          ...Object.values(networkSnakes)
+            .filter((s): s is Snake => !!(s && typeof s === 'object' && 'id' in s))
+            .filter((s) => s.id !== playerId),
+        ]}
         displayRadius={MINI_MAP_DISPLAY_RADIUS}
       />
       

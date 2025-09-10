@@ -3,7 +3,6 @@ import Game from './components/Game';
 import StartScreen from './components/StartScreen';
 import GameOverScreen from './components/GameOverScreen';
 import SettingsModal from './components/SettingsModal';
-import FirebaseConnectionTest from './FirebaseConnectionTest';
 import { GameState, GameSettings } from './types';
 import { 
   GAME_WIDTH, 
@@ -74,7 +73,6 @@ const App: React.FC = () => {
           backgroundColor: OUT_OF_BOUNDS_BG_COLOR 
         }}
       >
-        <FirebaseConnectionTest />
         {gameState === GameState.StartScreen && (
           <StartScreen 
             onStartGame={startGame} 
